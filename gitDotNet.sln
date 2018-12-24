@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.168
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gitDotNet", "gitDotNet\gitDotNet.csproj", "{CCBE043A-27F0-4ADB-A63A-E81D76542E7C}"
-EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "gitDotNet.Core", "gitDotNet.Core\gitDotNet.Core.fsproj", "{3446AAA4-7CDE-4056-9A16-61F76606B575}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "gitDotNet.Cli", "gitDotNet.Cli\gitDotNet.Cli.fsproj", "{D1C89710-F907-4E7A-9AB0-2148512E7862}"
@@ -15,10 +13,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CCBE043A-27F0-4ADB-A63A-E81D76542E7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CCBE043A-27F0-4ADB-A63A-E81D76542E7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CCBE043A-27F0-4ADB-A63A-E81D76542E7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CCBE043A-27F0-4ADB-A63A-E81D76542E7C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3446AAA4-7CDE-4056-9A16-61F76606B575}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3446AAA4-7CDE-4056-9A16-61F76606B575}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3446AAA4-7CDE-4056-9A16-61F76606B575}.Release|Any CPU.ActiveCfg = Release|Any CPU
