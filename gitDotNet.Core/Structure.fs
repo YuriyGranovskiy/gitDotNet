@@ -4,11 +4,10 @@ module Structure =
     open System.Text.RegularExpressions
     open System.IO
 
-    let private RefPattern : Regex =
+    let private refPattern : Regex =
             new Regex("^ref\: (?<ref>[^\n]+)\n{0,1}", RegexOptions.Compiled);
 
-
-    let GetHead(gitPath : string) : string =
+    let getHead(gitPath : string) : string =
             let headText = File.ReadAllText(Path.Combine(gitPath, "HEAD"))
-            let headTextMatch = RefPattern.Match(headText)
+            let headTextMatch = refPattern.Match(headText)
             headTextMatch.Groups.["ref"].Value;
