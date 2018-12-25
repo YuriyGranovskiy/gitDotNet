@@ -6,10 +6,20 @@ module Objects =
     open System.Text.RegularExpressions
     open System.Text
     open System
+
+    let private objectIdPattern : Regex =
+            new Regex("^(?<objectId>[a-f0-9]{40})\n{0,1}", RegexOptions.Compiled)
+
+    let private headerRegex : Regex =
+            new Regex("^(?<type>\\S+)\\ (?<length>\\d+)", RegexOptions.Compiled) 
+    
+    let private parentRegex : Regex =
+            new Regex("^parent\\ (?<id>[a-f0-9]{40})", RegexOptions.Compiled)
+
+    let private treeRegex : Regex =
+            new Regex("^tree\\ (?<id>[a-f0-9]{40})", RegexOptions.Compiled)
     
     type Header = {objectType : string; contentLength : int}
-
-    type GitObject = {header : Header; content : string[]}
 
     type ObjectId = struct
             val Id : string
@@ -18,12 +28,18 @@ module Objects =
                 "objects\\" + this.Id.Substring(0, 2) + "\\" + this.Id.Substring(2, 38)
     end
 
-    let private objectIdPattern : Regex =
-            new Regex("^(?<objectId>[a-f0-9]{40})\n{0,1}", RegexOptions.Compiled)
+    type GitObject(header : Header) =
+        member __.Header = header
+    
+    type CommitObject(header : Header, parentId : ObjectId, treeId : ObjectId) =
+        inherit GitObject(header)
+        member __.ParentId = parentId
+        member __.TreeId = treeId
 
-    let private headerRegex : Regex =
-            new Regex("^(?<type>\\S+)\\ (?<length>\\d+)", RegexOptions.Compiled)   
-            
+    type BlobObject(header : Header, content : string[]) =
+        inherit GitObject(header)
+        member __.Content = content
+
     let readFromStreamTillZero(stream: Stream) = seq<byte> {
         let currentByte = ref 0;
         let moveNext() = 
@@ -46,19 +62,35 @@ module Objects =
             let length = headerMatch.Groups.["length"].Value |> int;
             {new Header with objectType = objectType and contentLength = length}
 
+    let getIdByRegex(content : string[], regex : Regex) : ObjectId =
+        let element : string =
+                content
+                |> Array.filter (fun line -> regex.IsMatch(line)) 
+                |> Array.head
+        new ObjectId(regex.Match(element).Groups.["id"].Value)
+     
+    let createCommitObject(header : Header, stream : Stream) : GitObject =
+        let buffer : byte array = Array.zeroCreate<byte> header.contentLength
+        stream.Read(buffer, 0, header.contentLength) |> ignore
+        let content = UTF8Encoding.UTF8.GetString(buffer).Split('\n')
+        let parentId = getIdByRegex(content, parentRegex)
+        let treeId = getIdByRegex(content, treeRegex)
+        let commitObject = new CommitObject(header, parentId, treeId)
+        commitObject :> GitObject
+
+    let createBlobObject(header : Header, stream : Stream) : GitObject =
+        let buffer : byte array = Array.zeroCreate<byte> header.contentLength
+        stream.Read(buffer, 0, header.contentLength) |> ignore
+        let content = UTF8Encoding.UTF8.GetString(buffer).Split('\n')
+        let blobObject = new BlobObject(header, content)
+        blobObject :> GitObject
+
     let createObject(objectStream : Stream) : GitObject =
             let header = extractHeader(objectStream)
-            let buffer : byte array = Array.zeroCreate<byte> header.contentLength
-            objectStream.Read(buffer, 0, header.contentLength) |> ignore
-            {new GitObject with header = header and content = UTF8Encoding.UTF8.GetString(buffer).Split('\n') }
-
-    let getTree(gitObject : GitObject) : ObjectId =
-            let treeLine : string = 
-                gitObject.content 
-                |> Array.filter (fun line -> line.StartsWith("tree")) 
-                |> Array.head                
-            let treeId = treeLine.Substring(5, 40);
-            new ObjectId(treeId);
+            match header.objectType with
+            | "commit" -> createCommitObject(header, objectStream)
+            | "blob" -> createBlobObject(header, objectStream)
+            | _ -> new GitObject(header)
 
     let readBlob(stream : Stream) : ObjectId =
         readFromStreamTillZero(stream).ToArray() |> ignore

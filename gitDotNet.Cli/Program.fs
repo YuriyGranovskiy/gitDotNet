@@ -12,10 +12,10 @@ let getObject(objectPath: string) : GitObject =
     use inflaterStream = new InflaterInputStream(fileStream)
     createObject(inflaterStream);
 
-let getBlobObject(objectPath : string) : ObjectId =
+let getBlobObjectId(objectPath : string) : ObjectId =
     use fileStream = File.Open(objectPath, FileMode.Open, FileAccess.Read)
     use inflaterStream = new InflaterInputStream(fileStream)
-    extractHeader(inflaterStream) |> ignore
+    let _ = extractHeader(inflaterStream)
     readBlob(inflaterStream)
 
 [<EntryPoint>]
@@ -24,8 +24,7 @@ let main argv =
     let gitPath = Path.Combine(repoPath, ".git")
     let headPath = Structure.getHead(gitPath)
     let headObjectId = getHeadObjectId(Path.Combine(gitPath, headPath))
-    let gitObject = getObject(Path.Combine(gitPath, headObjectId.FilePath))
-    let treeId = getTree(gitObject)
-    let firstFileId = getBlobObject(Path.Combine(gitPath, treeId.FilePath))
-    let fileObject = getObject(Path.Combine(gitPath, firstFileId.FilePath))
+    let commitObject = getObject(Path.Combine(gitPath, headObjectId.FilePath)) :?> CommitObject
+    let firstFileId = getBlobObjectId(Path.Combine(gitPath, commitObject.TreeId.FilePath))
+    let myObject = getObject(Path.Combine(gitPath, firstFileId.FilePath))
     0 // return an integer exit code
